@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cloudra1n – Visual Dopamine Clone</title>
+  <style>
+    /* ===== БАЗА ===== */
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html, body { height:100%; }
+    body {
+      font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;
+      color:#fff;
+      background:
+        radial-gradient(circle at 18% 20%, rgba(255,255,255,0.12), transparent 55%),
+        radial-gradient(circle at 78% 72%, rgba(0,0,0,0.30), transparent 55%),
+        linear-gradient(160deg,#0cae8f,#007f8f,#004a6d);
+      background-attachment:fixed;
+      display:flex;
+      justify-content:center;
+      align-items:stretch;
+      -webkit-font-smoothing:antialiased;
+    }
+
+    .screen {
+      width:100%;
+      max-width:430px;
+      min-height:100vh;
+      padding:32px 20px 40px;
+      display:flex;
+      flex-direction:column;
+      position:relative;
+    }
+
+    /* ===== Верхний блок ===== */
+    .title-block {
+      margin-top:32px;
+      margin-bottom:24px;
+    }
+    .app-name {
+      font-size:36px;
+      font-weight:800;
+      letter-spacing:0.02em;
+      margin-bottom:10px;
+      text-shadow:0 2px 10px rgba(0,0,0,0.6);
+    }
+    .subtitle-main {
+      font-size:17px;
+      font-weight:600;
+      margin-bottom:6px;
+      text-shadow:0 1px 5px rgba(0,0,0,0.5);
+    }
+    .subtitle-muted {
+      font-size:15px;
+      color:rgba(255,255,255,0.78);
+      line-height:1.4;
+      text-shadow:0 1px 5px rgba(0,0,0,0.4);
+    }
+
+    /* ===== Карточка меню ===== */
+    .card {
+      margin-top:32px;
+      background:rgba(0,0,0,0.30);
+      border-radius:26px;
+      padding:18px 22px;
+      backdrop-filter:blur(22px);
+      -webkit-backdrop-filter:blur(22px);
+      box-shadow:0 18px 40px rgba(0,0,0,0.35);
+    }
+    .card-row {
+      display:flex;
+      align-items:center;
+      padding:14px 0;
+      cursor:pointer;
+    }
+    .card-row + .card-row {
+      border-top:1px solid rgba(255,255,255,0.08);
+    }
+    .card-row.disabled {
+      opacity:0.45;
+      cursor:default;
+    }
+    .card-icon {
+      width:26px;
+      height:26px;
+      margin-right:14px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:18px;
+      color:rgba(255,255,255,0.9);
+    }
+    .card-label {
+      flex:1;
+      font-size:17px;
+      font-weight:500;
+      text-shadow:0 1px 4px rgba(0,0,0,0.5);
+    }
+    .card-label.muted { color:rgba(255,255,255,0.55); }
+    .card-arrow {
+      font-size:20px;
+      color:rgba(255,255,255,0.85);
+    }
+
+    /* ===== Свайп Jailbreak ===== */
+    .jailbreak-bar-wrapper {
+      margin-top:auto;
+      padding-top:32px;
+      padding-bottom:env(safe-area-inset-bottom, 8px);
+    }
+    .jailbreak-bar {
+      position:relative;
+      height:58px;
+      border-radius:22px;
+      background:rgba(0,0,0,0.30);
+      backdrop-filter:blur(22px);
+      -webkit-backdrop-filter:blur(22px);
+      box-shadow:0 12px 30px rgba(0,0,0,0.35);
+      overflow:hidden;
+      padding:0 18px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      user-select:none;
+      touch-action:pan-y;
+    }
+    .jailbreak-track {
+      position:absolute;
+      inset:0;
+      border-radius:inherit;
+      background:linear-gradient(120deg,
+        rgba(255,255,255,0.06),
+        rgba(255,255,255,0.02),
+        rgba(255,255,255,0.10));
+      opacity:0.7;
+      pointer-events:none;
+    }
+    .jailbreak-label {
+      font-size:17px;
+      font-weight:600;
+      color:rgba(255,255,255,0.88);
+      pointer-events:none;
+      text-shadow:0 1px 4px rgba(0,0,0,0.6);
+      transition:opacity 0.25s ease;
+    }
+    .jailbreak-label.done { opacity:0.18; }
+    .jailbreak-handle {
+      position:absolute;
+      left:6px;
+      top:50%;
+      transform:translateY(-50%);
+      width:46px;
+      height:46px;
+      border-radius:18px;
+      background:radial-gradient(circle at 30% 20%, #ffffff, #e5f9ff);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      box-shadow:
+        0 8px 18px rgba(0,0,0,0.45),
+        0 0 0 1px rgba(255,255,255,0.9);
+      cursor:pointer;
+      touch-action:none;
+      transition:box-shadow 0.2s ease, background 0.2s ease;
+    }
+    .jailbreak-handle-icon { font-size:18px; color:#444; }
+    .jailbreak-handle.dragging {
+      box-shadow:
+        0 10px 26px rgba(0,0,0,0.55),
+        0 0 0 1px rgba(255,255,255,1);
+      background:radial-gradient(circle at 25% 15%, #ffffff, #f2fbff);
+    }
+    .jailbreak-complete {
+      background:rgba(0,0,0,0.45);
+    }
+    .jailbreak-complete .jailbreak-track {
+      background:linear-gradient(120deg,
+        rgba(0,255,160,0.2),
+        rgba(0,200,140,0.16),
+        rgba(0,255,190,0.3));
+    }
+    .jailbreak-complete .jailbreak-handle {
+      background:radial-gradient(circle at 30% 20%, #00ffbf, #00c897);
+    }
+    .jailbreak-complete .jailbreak-handle-icon { color:#003322; }
+
+    /* ===== Overlay ===== */
+    .overlay {
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,0.55);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:100;
+      backdrop-filter:blur(8px);
+      -webkit-backdrop-filter:blur(8px);
+    }
+    .overlay.visible { display:flex; }
+    .overlay-box {
+      background:rgba(0,0,0,0.85);
+      padding:18px 22px;
+      border-radius:18px;
+      min-width:220px;
+      max-width:80%;
+      text-align:center;
+      box-shadow:0 16px 40px rgba(0,0,0,0.65);
+    }
+    .overlay-title {
+      font-size:17px;
+      font-weight:600;
+      margin-bottom:8px;
+    }
+    .overlay-sub {
+      font-size:14px;
+      color:rgba(255,255,255,0.8);
+    }
+    .spinner {
+      width:26px;
+      height:26px;
+      border-radius:50%;
+      border:3px solid rgba(255,255,255,0.16);
+      border-top-color:#ffffff;
+      margin:0 auto 10px;
+      animation:spin 0.9s linear infinite;
+    }
+    @keyframes spin { to { transform:rotate(360deg); } }
+
+    /* ===== Toast ===== */
+    .status-toast {
+      position:fixed;
+      left:50%;
+      bottom:16px;
+      transform:translateX(-50%);
+      min-width:220px;
+      max-width:90%;
+      background:rgba(0,0,0,0.78);
+      color:#fff;
+      padding:10px 16px;
+      border-radius:999px;
+      font-size:13px;
+      text-align:center;
+      opacity:0;
+      pointer-events:none;
+      transition:opacity 0.25s ease, transform 0.25s ease;
+      z-index:50;
+    }
+    .status-toast.show {
+      opacity:1;
+      transform:translateX(-50%) translateY(-6px);
+    }
+
+    /* ===== Адаптив ===== */
+    @media (max-width:380px){
+      .app-name{font-size:30px;}
+      .card{border-radius:22px;}
+      .jailbreak-bar{height:54px;}
+      .jailbreak-handle{width:42px;height:42px;}
+    }
+  </style>
+</head>
+<body>
+  <div class="screen">
+    <!-- Верхняя часть -->
+    <div class="title-block">
+      <div class="app-name">Cloudra1n</div>
+      <div class="subtitle-main">iOS 15.0 – 15.4.1 | A12 – A15, M1</div>
+      <div class="subtitle-muted">
+        by opa334, évélyne<br />
+        UI by sourceloc<br />
+        Based on Fugu15
+      </div>
+    </div>
+
+    <!-- Карточка меню -->
+    <div class="card">
+      <div class="card-row" id="rowSettings">
+        <div class="card-icon">⚙️</div>
+        <div class="card-label">Settings</div>
+        <div class="card-arrow">›</div>
+      </div>
+      <div class="card-row disabled" id="rowRespring">
+        <div class="card-icon">⟳</div>
+        <div class="card-label muted">Restart SpringBoard</div>
+      </div>
+      <div class="card-row disabled" id="rowUserspace">
+        <div class="card-icon">⟳</div>
+        <div class="card-label muted">Reboot Userspace</div>
+      </div>
+      <div class="card-row" id="rowCredits">
+        <div class="card-icon">ⓘ</div>
+        <div class="card-label">Credits</div>
+        <div class="card-arrow">›</div>
+      </div>
+    </div>
+
+    <!-- Свайп Jailbreak -->
+    <div class="jailbreak-bar-wrapper">
+      <div class="jailbreak-bar" id="jbBar">
+        <div class="jailbreak-track"></div>
+        <div class="jailbreak-label" id="jbLabel">Swipe to Jailbreak</div>
+        <div class="jailbreak-handle" id="jbHandle">
+          <div class="jailbreak-handle-icon" id="jbHandleIcon">🔓</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Overlay -->
+  <div class="overlay" id="overlay">
+    <div class="overlay-box">
+      <div class="spinner"></div>
+      <div class="overlay-title" id="overlayTitle">Jailbreaking…</div>
+      <div class="overlay-sub" id="overlaySub">
+        Exploiting kernel and applying patches
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="status-toast" id="toast"></div>
+
+  <script>
+    const jbBar    = document.getElementById('jbBar');
+    const jbHandle = document.getElementById('jbHandle');
+    const jbLabel  = document.getElementById('jbLabel');
+    const jbIcon   = document.getElementById('jbHandleIcon');
+    const overlay  = document.getElementById('overlay');
+    const overlayTitle = document.getElementById('overlayTitle');
+    const overlaySub   = document.getElementById('overlaySub');
+    const toast   = document.getElementById('toast');
+
+    const rowSettings  = document.getElementById('rowSettings');
+    const rowRespring  = document.getElementById('rowRespring');
+    const rowUserspace = document.getElementById('rowUserspace');
+    const rowCredits   = document.getElementById('rowCredits');
+
+    let isDragging   = false;
+    let startX       = 0;
+    let currentX     = 0;
+    let handleStartX = 0;
+    let jailbroken   = false;
+
+    function showToast(msg, ms = 2000) {
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), ms);
+    }
+
+    function showOverlay(title, sub) {
+      overlayTitle.textContent = title;
+      overlaySub.textContent   = sub;
+      overlay.classList.add('visible');
+    }
+
+    function hideOverlay() {
+      overlay.classList.remove('visible');
+    }
+
+    function getMaxOffset() {
+      const barRect    = jbBar.getBoundingClientRect();
+      const handleRect = jbHandle.getBoundingClientRect();
+      return barRect.width - handleRect.width - 12; // по 6px слева/справа
+    }
+
+    function setHandleOffset(px) {
+      jbHandle.style.transform =
+        `translateY(-50%) translateX(${px}px)`;
+    }
+
+    function resetHandle(animated = true) {
+      jbHandle.style.transition = animated ? 'transform 0.25s ease' : 'none';
+      setHandleOffset(0);
+      setTimeout(() => { jbHandle.style.transition = 'none'; }, 260);
+    }
+
+    function activateVisualFunctions() {
+      jailbroken = true;
+      jbLabel.textContent = 'Jailbroken';
+      jbLabel.classList.add('done');
+      jbIcon.textContent = '✅';
+      jbBar.classList.add('jailbreak-complete');
+      rowRespring.classList.remove('disabled');
+      rowUserspace.classList.remove('disabled');
+    }
+
+    function handleDragStart(clientX) {
+      if (jailbroken) {
+        showToast('Already jailbroken (visual)');
+        return;
+      }
+      isDragging = true;
+      startX = clientX;
+      const style  = window.getComputedStyle(jbHandle);
+      const matrix = new WebKitCSSMatrix(style.transform);
+      handleStartX = matrix.m41 || 0;
+      jbHandle.classList.add('dragging');
+    }
+
+    function handleDragMove(clientX) {
+      if (!isDragging) return;
+      const delta    = clientX - startX;
+      const maxOff   = getMaxOffset();
+      let   newX     = handleStartX + delta;
+      if (newX < 0) newX = 0;
+      if (newX > maxOff) newX = maxOff;
+      setHandleOffset(newX);
+      currentX = newX;
+    }
+
+    function handleDragEnd() {
+      if (!isDragging) return;
+      isDragging = false;
+      jbHandle.classList.remove('dragging');
+
+      const maxOff   = getMaxOffset();
+      const threshold = maxOff * 0.75;
+
+      if (currentX >= threshold) {
+        // «успешный джейл»
+        setHandleOffset(maxOff);
+        showOverlay('Jailbreaking…', 'Exploiting kernel and applying patches');
+
+        setTimeout(() => {
+          overlaySub.textContent = 'Patching rootfs and installing bootstrap';
+        }, 1500);
+
+        setTimeout(() => {
+          hideOverlay();
+          activateVisualFunctions();
+          showToast('Cloudra1n visual jailbreak complete.', 2500);
+        }, 3200);
+      } else {
+        resetHandle(true);
+      }
+    }
+
+    /* --- мышь --- */
+    jbHandle.addEventListener('mousedown', e => {
+      e.preventDefault();
+      handleDragStart(e.clientX);
+    });
+    window.addEventListener('mousemove', e => handleDragMove(e.clientX));
+    window.addEventListener('mouseup',   () => handleDragEnd());
+
+    /* --- тач --- */
+    jbHandle.addEventListener('touchstart', e => {
+      const t = e.touches[0];
+      handleDragStart(t.clientX);
+    }, { passive:true });
+    window.addEventListener('touchmove', e => {
+      const t = e.touches[0];
+      handleDragMove(t.clientX);
+    }, { passive:true });
+    window.addEventListener('touchend', () => handleDragEnd());
+
+    /* ===== Клики по пунктам меню (только визуал) ===== */
+    rowSettings.addEventListener('click', () => {
+      showOverlay('Settings', 'Visual-only settings screen placeholder.');
+      setTimeout(hideOverlay, 1600);
+    });
+
+    rowCredits.addEventListener('click', () => {
+      showOverlay('Credits', 'opa334, évélyne, sourceloc • Visual clone: Cloudra1n');
+      setTimeout(hideOverlay, 2200);
+    });
+
+    rowRespring.addEventListener('click', () => {
+      if (!jailbroken) { showToast('Jailbreak first'); return; }
+      showOverlay('Restarting SpringBoard…', 'Killing backboardd and reloading UI (visual)');
+      setTimeout(() => {
+        hideOverlay();
+        showToast('SpringBoard restarted (visual only)', 2200);
+      }, 2200);
+    });
+
+    rowUserspace.addEventListener('click', () => {
+      if (!jailbroken) { showToast('Jailbreak first'); return; }
+      showOverlay('Rebooting Userspace…', 'Restarting all daemons (visual)');
+      setTimeout(() => {
+        hideOverlay();
+        showToast('Userspace rebooted (visual only)', 2200);
+      }, 2600);
+    });
+  </script>
+</body>
+</html>
